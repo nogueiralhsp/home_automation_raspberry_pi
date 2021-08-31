@@ -8,15 +8,18 @@ from tkinter import ttk
 
 import time
 
-# ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-ser = serial.Serial('/dev/tty.usbserial-141120',
-                    9600, timeout=1)  # for mac dev
-ser.flush()
+devIsOn = True #var used for development off the raspberry pi
 
 arduino_temperature_actual = 0
 arduino_temperature = 0
 
 light1Status = False
+
+if devIsOn==False:
+    # ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+    ser = serial.Serial('/dev/tty.usbserial-141120',
+                        9600, timeout=1)  # for mac dev
+    ser.flush()
 
 
 def temperetureUpdate():
@@ -64,7 +67,7 @@ def lightOneUpdate():
 
     responseDict = json.loads(response.text)
     lightOneStatus = responseDict['statusBooleanValue']
-    
+
     if lightOneStatus == True:
         lightOneLabel.config(background='green', text='Light 1 = On')
     else:
@@ -75,19 +78,22 @@ def lightOneUpdate():
 
 # function that run all the functions to be ran at the start
 def functionUpdates():
-    temperetureUpdate()
+    if devIsOn == False: #comparation used for dev off the raspberry pi
+        temperetureUpdate()
+    
     lightOneUpdate()
 
 
 # Create Window
 root = tk.Tk()
-root.geometry('300x200')
+root.geometry('500x300')
 
 # Temperature Items
 temperatureLabel = tk.Label(
-    text='Current Temp:',
+    text='Current Room Sensor Temp:',
 )
 temperatureLabel.pack()
+
 # temperature entry
 temperatureEntry = tk.Entry()
 temperatureEntry.pack()
@@ -107,6 +113,15 @@ button = tk.Button(
     command=lightOneUpdate
 )
 button.pack()
+
+quitButton = tk.Button(
+    text='Close',
+    width=15,
+    height=2,
+    command=root.destroy
+)
+quitButton.pack()
+
 
 root.after(2000, functionUpdates)
 
