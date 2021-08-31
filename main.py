@@ -8,7 +8,7 @@ from tkinter import ttk
 
 import time
 
-devIsOn = True #var used for development off the raspberry pi
+devIsOn = False #var used for development off the raspberry pi
 
 arduino_temperature_actual = 0
 arduino_temperature = 0
