@@ -1,10 +1,19 @@
-import os
-import serial
+import RPi.GPIO as GPIO
+import time
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+GPIO.setup(21,GPIO.OUT)
+print ("LED on")
+GPIO.output(21,GPIO.HIGH)
+time.sleep(1)
+print ("LED off")
+GPIO.output(21,GPIO.LOW)
 
-# for mac dev
-# if serial.Serial('/dev/tty.usbserial-142130'):
-#     serialExisit = True
-#     ser = serial.Serial('/dev/tty.usbserial-142130',9600, timeout=1)  
-#     ser.flush()
+GPIO.setup(20,GPIO.OUT)
+print ("LED on")
+GPIO.output(20,GPIO.HIGH)
+time.sleep(1)
+print ("LED off")
+GPIO.output(20,GPIO.LOW)
 
-print (os.path.exists('/dev/tty.usbserial-142130'))
+
