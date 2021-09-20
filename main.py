@@ -183,10 +183,7 @@ def lightTwoSwitch():
     print(response.text)
 
 # updating GPIOs
-
-
 def updateGpios():
-
     # GarageLightOne Handler
     if currentLightOneStatus == True:
         GPIO.output(GarageLightOneOnGPIO, GPIO.HIGH)
@@ -220,8 +217,6 @@ def exit_app():
 # here starts creating window and main application.
 # Create Window
 root = tk.Tk()
-
-
 root.geometry('800x480')
 
 
