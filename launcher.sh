@@ -1,4 +1,4 @@
 cd /
 cd /home/pi/Desktop/projects/devices
-sudo python main.py
+sudo python3 main.py
 cd /

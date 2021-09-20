@@ -4,13 +4,24 @@ import serial
 import requests
 import json
 
-
 import tkinter as tk
 from tkinter import ttk
 
 import time
 
+
+
+# project global variables
+arduino_temperature_actual = 0
+arduino_temperature = 0
+currentLightOneStatus = False
 serialExisit = False
+
+
+if os.environ.get('DISPLAY','') == '':
+    print('no display found. Using :0.0')
+    os.environ.__setitem__('DISPLAY', ':0.0')
+
 
 if serial.Serial('/dev/ttyUSB0', 9600, timeout=1):
     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
@@ -18,10 +29,7 @@ if serial.Serial('/dev/ttyUSB0', 9600, timeout=1):
 
 
 
-arduino_temperature_actual = 0
-arduino_temperature = 0
 
-light1Status = False
 
 def temperetureUpdate():
 
@@ -59,6 +67,8 @@ def temperetureUpdate():
 
 
 def lightOneUpdate():
+    global currentLightOneStatus
+
     url = "https://my-home-automation-api.herokuapp.com/device/6128d9c2274a6f001670e7b9"
 
     payload = ""
@@ -74,7 +84,32 @@ def lightOneUpdate():
     else:
         lightOneLabel.config(background='red', text='Light 1 = Off')
 
+    currentLightOneStatus = lightOneStatus
     root.after(2000, lightOneUpdate)
+
+def lightOneSwitch():
+    global currentLightOneStatus
+
+    if currentLightOneStatus == True:
+        lightOneSwitchTo = False    
+    else:
+        lightOneSwitchTo = True
+
+    url = "https://my-home-automation-api.herokuapp.com/device/status"
+
+    payload = json.dumps({
+        "device": "6128d9c2274a6f001670e7b9",
+        "statusValue": "non",
+        "statusBooleanValue": lightOneSwitchTo,
+        "statusType": "digital"
+    })
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    print(response.text)
 
 
 # function that run all the functions to be ran at the start
@@ -118,7 +153,7 @@ button = tk.Button(
     text='Light One',
     width=25,
     height=5,
-    command=lightOneUpdate
+    command=lightOneSwitch
 )
 button.pack()
 
