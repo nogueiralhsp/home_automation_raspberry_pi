@@ -1,17 +1,31 @@
 #!/usr/bin/env python3
+import os
 import serial
 import requests
 import json
+
 
 import tkinter as tk
 from tkinter import ttk
 
 import time
 
-# ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-ser = serial.Serial('/dev/tty.usbserial-141120',
-                    9600, timeout=1)  # for mac dev
-ser.flush()
+serialExisit = False
+
+#for raspberry py
+# if serial.Serial('/dev/ttyUSB0', 9600, timeout=1):
+#     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+#     ser.flush()
+
+
+# for mac dev
+if os.path.exists('/dev/tty.usbserial-142130'):
+    serialExisit = True
+    ser = serial.Serial('/dev/tty.usbserial-142130',9600, timeout=1)  
+    ser.flush()
+
+
+
 
 arduino_temperature_actual = 0
 arduino_temperature = 0
@@ -75,13 +89,18 @@ def lightOneUpdate():
 
 # function that run all the functions to be ran at the start
 def functionUpdates():
-    temperetureUpdate()
+    
     lightOneUpdate()
+    if serialExisit == True:
+        temperetureUpdate()
 
+def exit_app():
+    root.destroy()
 
+# here starts creating window and main application.
 # Create Window
 root = tk.Tk()
-root.geometry('300x200')
+root.geometry('800x500')
 
 # Temperature Items
 temperatureLabel = tk.Label(
@@ -101,12 +120,20 @@ lightOneLabel = tk.Label(
 lightOneLabel.pack()
 
 button = tk.Button(
-    text='Click me!',
+    text='Light One',
     width=25,
     height=5,
     command=lightOneUpdate
 )
 button.pack()
+
+closeButton = tk.Button(
+    text='Close',
+    width=25,
+    height=5,
+    command=exit_app
+)
+closeButton.pack()
 
 root.after(2000, functionUpdates)
 
