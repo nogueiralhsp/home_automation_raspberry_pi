@@ -12,18 +12,9 @@ import time
 
 serialExisit = False
 
-#for raspberry py
-# if serial.Serial('/dev/ttyUSB0', 9600, timeout=1):
-#     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-#     ser.flush()
-
-
-# for mac dev
-if os.path.exists('/dev/tty.usbserial-142130'):
-    serialExisit = True
-    ser = serial.Serial('/dev/tty.usbserial-142130',9600, timeout=1)  
+if serial.Serial('/dev/ttyUSB0', 9600, timeout=1):
+    ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     ser.flush()
-
 
 
 
@@ -31,7 +22,6 @@ arduino_temperature_actual = 0
 arduino_temperature = 0
 
 light1Status = False
-
 
 def temperetureUpdate():
 
@@ -78,7 +68,7 @@ def lightOneUpdate():
 
     responseDict = json.loads(response.text)
     lightOneStatus = responseDict['statusBooleanValue']
-    
+
     if lightOneStatus == True:
         lightOneLabel.config(background='green', text='Light 1 = On')
     else:
@@ -89,6 +79,7 @@ def lightOneUpdate():
 
 # function that run all the functions to be ran at the start
 def functionUpdates():
+    temperetureUpdate()
     
     lightOneUpdate()
     if serialExisit == True:
@@ -100,13 +91,17 @@ def exit_app():
 # here starts creating window and main application.
 # Create Window
 root = tk.Tk()
-root.geometry('800x500')
+
+
+root.geometry('800x480')
+
 
 # Temperature Items
 temperatureLabel = tk.Label(
-    text='Current Temp:',
+    text='Current Room Sensor Temp:',
 )
 temperatureLabel.pack()
+
 # temperature entry
 temperatureEntry = tk.Entry()
 temperatureEntry.pack()
