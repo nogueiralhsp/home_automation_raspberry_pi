@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 import os
+from tkinter.constants import S
 import serial
 import requests
 import json
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import *
 
 import time
 
 # Importing and Naming GPIOs
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
+
+
+# GPIO20
+GardenUpperLevelLightGPIO = 16
+GPIO.setup(GardenUpperLevelLightGPIO, GPIO.OUT)
+
 
 # GPIO20
 GarageLightTwoOnGPIO = 20
@@ -26,10 +33,17 @@ arduino_temperature_actual = 0
 arduino_temperature = 0
 currentLightOneStatus = False
 currentLightTwoStatus = False
-# device_is=6128d9c2274a6f001670e7b9
+currentGardenUpperLevelLightStatus = False
+
+
+# Devices Ids
+# garageLightOneDeviceId=6128d9c2274a6f001670e7b9
 garageLightOneDeviceId = '6128d9c2274a6f001670e7b9'
-# device_is=6148cbe49334480016839378
+# garageLightTwoDeviceId=6148cbe49334480016839378
 garageLightTwoDeviceId = '6148cbe49334480016839378'
+# gardenUpperLevelLightId="6149904b2f671e0016137975"
+gardenUpperLevelLightId = '6149904b2f671e0016137975'
+
 serialExisit = False
 apiRefreshTime = 2000  # time to call api for refreshing / call api
 
@@ -47,6 +61,9 @@ if os.path.exists('/dev/ttyUSB0'):
     serialExisit = True  # true when arduino is found
 
 
+# ***************************************************************************
+#                         Garage Handling Functions                         *
+# ***************************************************************************
 def temperetureUpdate():
 
     global arduino_temperature
@@ -106,7 +123,7 @@ def garageLightOneUpdate():
 
     if currentLightOneStatus != lightOneStatus:
         currentLightOneStatus = lightOneStatus
-        updateGarageLightOneGpio(currentLightOneStatus)
+        updateGarageLightOneGpio(currentLightOneStatus)  # updating GPIO
     # runs garageLightOneUpdate every 2 seconds
     root.after(apiRefreshTime, garageLightOneUpdate)
 
@@ -136,6 +153,14 @@ def lightOneSwitch():  # used when pressed button on screen
     print(response.text)
 
 
+def updateGarageLightOneGpio(lightStatus):
+    # GarageLightOne Handler
+    if lightStatus == True:
+        GPIO.output(GarageLightOneOnGPIO, GPIO.HIGH)
+    else:
+        GPIO.output(GarageLightOneOnGPIO, GPIO.LOW)
+
+
 def garageLightTwoUpdate():
     global garageLightTwoDeviceId
     global currentLightTwoStatus
@@ -157,7 +182,7 @@ def garageLightTwoUpdate():
 
     if currentLightTwoStatus != lightTwoStatus:
         currentLightTwoStatus = lightTwoStatus
-        updateGarageLightTwoGpio(currentLightTwoStatus)
+        updateGarageLightTwoGpio(currentLightTwoStatus)  # updating GPIO
 
     # runs garageLightTwoUpdate every 2 seconds
     root.after(apiRefreshTime, garageLightTwoUpdate)
@@ -187,16 +212,6 @@ def lightTwoSwitch():  # used when pressed button on screen
 
     print(response.text)
 
-# updating GPIOs
-
-
-def updateGarageLightOneGpio(lightStatus):
-    # GarageLightOne Handler
-    if lightStatus == True:
-        GPIO.output(GarageLightOneOnGPIO, GPIO.HIGH)
-    else:
-        GPIO.output(GarageLightOneOnGPIO, GPIO.LOW)
-
 
 def updateGarageLightTwoGpio(lightStatus):
     # GarageLightTwo Handler
@@ -206,10 +221,78 @@ def updateGarageLightTwoGpio(lightStatus):
         GPIO.output(GarageLightTwoOnGPIO, GPIO.LOW)
 
 
+# ***************************************************************************
+#                         Garden Handling Functions                         *
+# ***************************************************************************
+
+def gardenUpperLevelLightUpdate():
+    global currentGardenUpperLevelLightStatus
+    global gardenUpperLevelLightId
+
+    url = "https://my-home-automation-api.herokuapp.com/device/"+gardenUpperLevelLightId
+
+    payload = ""
+    headers = {}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    responseDict = json.loads(response.text)
+    # light status from server (data base)
+    gardenUpperLevelLightStatus = responseDict['statusBooleanValue']
+
+    if gardenUpperLevelLightStatus == True:
+        upperLevelLightLabel.config(background='green', text='Light 1 = On')
+    else:
+        upperLevelLightLabel.config(background='red', text='Light 1 = Off')
+
+    if gardenUpperLevelLightStatus != currentGardenUpperLevelLightStatus:
+        currentGardenUpperLevelLightStatus = gardenUpperLevelLightStatus
+        updateGardenUpperLevelLightGpio(
+            currentGardenUpperLevelLightStatus
+        )  # updating GPIO
+
+    # runs garageLightOneUpdate every 2 seconds
+    root.after(apiRefreshTime, gardenUpperLevelLightUpdate)
+
+
+def gardenUpperLevelLightSwitch():  # used when pressed button on screen
+    global currentGardenUpperLevelLightStatus
+
+    if currentGardenUpperLevelLightStatus == True:
+        gardenUpperLevelLightSwitchTo = False
+    else:
+        gardenUpperLevelLightSwitchTo = True
+
+    url = "https://my-home-automation-api.herokuapp.com/device/status"
+
+    payload = json.dumps({
+        "device": gardenUpperLevelLightId,
+        "statusValue": "non",
+        "statusBooleanValue": gardenUpperLevelLightSwitchTo,
+        "statusType": "digital"
+    })
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    print(response.text)
+
+
+def updateGardenUpperLevelLightGpio(lightStatus):
+    # GarageLightTwo Handler
+    if lightStatus == True:
+        GPIO.output(GardenUpperLevelLightGPIO, GPIO.HIGH)
+    else:
+        GPIO.output(GardenUpperLevelLightGPIO, GPIO.LOW)
+
+
 # function that run all the functions to be ran at the start
 def functionUpdates():
     garageLightOneUpdate()
     garageLightTwoUpdate()
+    gardenUpperLevelLightUpdate()
 
     # serialExist means arduino is connected and available on USB
     if serialExisit == True:
@@ -219,117 +302,146 @@ def functionUpdates():
 def exit_app():
     root.destroy()
 
+# ***************************************************************************
+#              here starts creating window and main application.            *
+# ***************************************************************************
 
-# here starts creating window and main application.
+# vars used on GUI
+lableWidth = 15
+lableHeigh = 1
+buttonWidth = 15
+buttonHeight = 1
+
+
 # Create Window
 root = tk.Tk()
-root.geometry('800x480')
-
-garageFrame = tk.Frame(
-    master=root,
+root.geometry('400x480')
+mainContainerFrame = Frame(
+    root
+)
+mainContainerFrame.pack(
+    fill='both',
+    side='top',
+    expand='yes'
+)
+garageFrame = LabelFrame(
+    mainContainerFrame,
+    text='Garage Controls',
     width=100,
     height=100,
-    bg="white"
-).pack(
-    fill=tk.BOTH,
-    side=tk.LEFT,
-    expand=True
+    # bg="#331a00"
+)
+garageFrame.pack(
+    fill="both",
+    expand="yes",
+    side="left"
 )
 
-backYardFrame = tk.Frame(
-    master=root,
+gardenFrame = LabelFrame(
+    mainContainerFrame,
+    text='Garden Controls',
     width=100,
     height=100,
-    bg="gray"
-).pack(
-    fill=tk.BOTH,
-    side=tk.LEFT,
-    expand=True
+    # bg="red"
+)
+gardenFrame.pack(
+    fill='both',
+    side='left',
+    expand='yes'
 )
 
-# Label for Garage Frame
-garageLabelFrame = tk.Label(
-    master=garageFrame,
-    text='Garage Lights',
-    bg='brown',
-    fg='#ff0',
-    padx='100',
-    pady=5,
-).pack(
-    fill=tk.X
+bottomControls = Frame(
+    root,
+    height=1
 )
+bottomControls.pack(
+    side='top',
+    fill='both',
+    expand='yes',
+
+)
+
 
 # Temperature Items
-temperatureLabel = tk.Label(
-    master=garageFrame,
-    text='Current Room Sensor Temp:',
+temperatureLabel = Label(
+    garageFrame,
+    text="Current Room Sensor Temp:",
 )
 temperatureLabel.pack()
 
 # temperature entry
-temperatureEntry = tk.Entry(
-    master=garageFrame
+temperatureEntry = Entry(
+    garageFrame,
+    width=15
 )
 temperatureEntry.insert(0, 'loading...')
 temperatureEntry.pack()
 
 # light one items
-garageLightOneLabel = tk.Label(
-    master=garageFrame,
+garageLightOneLabel = Label(
+    garageFrame,
     text='Loading...',
-    width=15,
-    height=2,
+    width=lableWidth,
+    height=lableHeigh,
 )
 garageLightOneLabel.pack()
 
-lightOneButton = tk.Button(
-    master=garageFrame,
+lightOneButton = Button(
+    garageFrame,
     text='Light One',
-    width=15,
-    height=1,
+    width=buttonWidth,
+    height=buttonHeight,
     command=lightOneSwitch
 )
 lightOneButton.pack()
 
 # light Two items
-garageLightTwoLabel = tk.Label(
-    master=garageFrame,
+garageLightTwoLabel = Label(
+    garageFrame,
     text='Loading...',
-    width=15,
-    height=2,
+    width=lableWidth,
+    height=lableHeigh,
 )
 garageLightTwoLabel.pack()
 
-lightTwoButton = tk.Button(
-    master=garageFrame,
+lightTwoButton = Button(
+    garageFrame,
     text='Light Two',
-    width=15,
-    height=1,
+    width=buttonWidth,
+    height=buttonHeight,
     command=lightTwoSwitch
 )
 lightTwoButton.pack()
 
-closeButton = tk.Button(
-    master=garageFrame,
+
+# Garden components
+upperLevelLightLabel = Label(
+    gardenFrame,
+    text='Loading...',
+    width=lableWidth,
+    height=lableHeigh,
+)
+upperLevelLightLabel.pack()
+
+upperLevelLightButton = Button(
+    gardenFrame,
+    text='Upper Level',
+    width=buttonWidth,
+    height=buttonHeight,
+    command=gardenUpperLevelLightSwitch
+)
+upperLevelLightButton.pack()
+
+
+# close window/application button
+closeButton = Button(
+    root,
     text='Close',
-    width=15,
-    height=1,
+    width=buttonWidth,
+    height=buttonHeight,
     command=exit_app
 )
-closeButton.pack(side='right')
-
-
-# Backyard components
-lightBackyardUpperLevel = tk.Button(
-    master=backYardFrame,
-    text='Opper Level',
-    width=15,
-    height=1,
-    command=lightTwoSwitch
-)
-lightBackyardUpperLevel.pack()
-
-
+closeButton.pack(side='bottom')
 
 # request functionUpdates to run after 2secs running
 root.after(apiRefreshTime, functionUpdates)

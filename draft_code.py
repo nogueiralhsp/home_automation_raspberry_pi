@@ -1,19 +1,19 @@
-import RPi.GPIO as GPIO
-import time
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-GPIO.setup(21,GPIO.OUT)
-print ("LED on")
-GPIO.output(21,GPIO.HIGH)
-time.sleep(1)
-print ("LED off")
-GPIO.output(21,GPIO.LOW)
-
-GPIO.setup(20,GPIO.OUT)
-print ("LED on")
-GPIO.output(20,GPIO.HIGH)
-time.sleep(1)
-print ("LED off")
-GPIO.output(20,GPIO.LOW)
+import os
+import tkinter as tk
+from tkinter import *
 
 
+# used to run app through SSH
+if os.environ.get('DISPLAY', '') == '':
+    # print('no display found. Using :0.0') #commented out when don't want to log in terminal
+    os.environ.__setitem__('DISPLAY', ':0.0')
+
+root = tk.Tk()
+
+labelframe = LabelFrame(root, text="This is a LabelFrame")
+labelframe.pack(fill="both", expand="yes")
+ 
+left = Label(labelframe, text="Inside the LabelFrame")
+left.pack()
+ 
+root.mainloop()
