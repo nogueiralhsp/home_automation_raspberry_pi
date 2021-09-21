@@ -104,12 +104,14 @@ def garageLightOneUpdate():
     else:
         garageLightOneLabel.config(background='red', text='Light 1 = Off')
 
-    currentLightOneStatus = lightOneStatus
+    if currentLightOneStatus != lightOneStatus:
+        currentLightOneStatus = lightOneStatus
+        updateGarageLightOneGpio(currentLightOneStatus)
     # runs garageLightOneUpdate every 2 seconds
     root.after(apiRefreshTime, garageLightOneUpdate)
 
 
-def lightOneSwitch():
+def lightOneSwitch():  # used when pressed button on screen
     global currentLightOneStatus
 
     if currentLightOneStatus == True:
@@ -153,12 +155,15 @@ def garageLightTwoUpdate():
     else:
         garageLightTwoLabel.config(background='red', text='Light 2 = Off')
 
-    currentLightTwoStatus = lightTwoStatus
+    if currentLightTwoStatus != lightTwoStatus:
+        currentLightTwoStatus = lightTwoStatus
+        updateGarageLightTwoGpio(currentLightTwoStatus)
+
     # runs garageLightTwoUpdate every 2 seconds
     root.after(apiRefreshTime, garageLightTwoUpdate)
 
 
-def lightTwoSwitch():
+def lightTwoSwitch():  # used when pressed button on screen
     global currentLightTwoStatus
 
     if currentLightTwoStatus == True:
@@ -183,27 +188,28 @@ def lightTwoSwitch():
     print(response.text)
 
 # updating GPIOs
-def updateGpios():
+
+
+def updateGarageLightOneGpio(lightStatus):
     # GarageLightOne Handler
-    if currentLightOneStatus == True:
+    if lightStatus == True:
         GPIO.output(GarageLightOneOnGPIO, GPIO.HIGH)
     else:
         GPIO.output(GarageLightOneOnGPIO, GPIO.LOW)
-    root.after(apiRefreshTime, updateGpios)
 
+
+def updateGarageLightTwoGpio(lightStatus):
     # GarageLightTwo Handler
-    if currentLightTwoStatus == True:
+    if lightStatus == True:
         GPIO.output(GarageLightTwoOnGPIO, GPIO.HIGH)
     else:
         GPIO.output(GarageLightTwoOnGPIO, GPIO.LOW)
-    root.after(apiRefreshTime, updateGpios)
 
 
 # function that run all the functions to be ran at the start
 def functionUpdates():
     garageLightOneUpdate()
     garageLightTwoUpdate()
-    updateGpios()
 
     # serialExist means arduino is connected and available on USB
     if serialExisit == True:
@@ -219,57 +225,111 @@ def exit_app():
 root = tk.Tk()
 root.geometry('800x480')
 
+garageFrame = tk.Frame(
+    master=root,
+    width=100,
+    height=100,
+    bg="white"
+).pack(
+    fill=tk.BOTH,
+    side=tk.LEFT,
+    expand=True
+)
+
+backYardFrame = tk.Frame(
+    master=root,
+    width=100,
+    height=100,
+    bg="gray"
+).pack(
+    fill=tk.BOTH,
+    side=tk.LEFT,
+    expand=True
+)
+
+# Label for Garage Frame
+garageLabelFrame = tk.Label(
+    master=garageFrame,
+    text='Garage Lights',
+    bg='brown',
+    fg='#ff0',
+    padx='100',
+    pady=5,
+).pack(
+    fill=tk.X
+)
 
 # Temperature Items
 temperatureLabel = tk.Label(
+    master=garageFrame,
     text='Current Room Sensor Temp:',
 )
 temperatureLabel.pack()
 
 # temperature entry
-temperatureEntry = tk.Entry()
+temperatureEntry = tk.Entry(
+    master=garageFrame
+)
 temperatureEntry.insert(0, 'loading...')
 temperatureEntry.pack()
 
 # light one items
 garageLightOneLabel = tk.Label(
+    master=garageFrame,
     text='Loading...',
     width=15,
     height=2,
 )
 garageLightOneLabel.pack()
 
-button = tk.Button(
+lightOneButton = tk.Button(
+    master=garageFrame,
     text='Light One',
     width=15,
     height=1,
     command=lightOneSwitch
 )
-button.pack()
+lightOneButton.pack()
 
 # light Two items
 garageLightTwoLabel = tk.Label(
+    master=garageFrame,
     text='Loading...',
     width=15,
     height=2,
 )
 garageLightTwoLabel.pack()
 
-button = tk.Button(
+lightTwoButton = tk.Button(
+    master=garageFrame,
     text='Light Two',
     width=15,
     height=1,
     command=lightTwoSwitch
 )
-button.pack()
+lightTwoButton.pack()
 
 closeButton = tk.Button(
+    master=garageFrame,
     text='Close',
     width=15,
     height=1,
     command=exit_app
 )
 closeButton.pack(side='right')
+
+
+# Backyard components
+lightBackyardUpperLevel = tk.Button(
+    master=backYardFrame,
+    text='Opper Level',
+    width=15,
+    height=1,
+    command=lightTwoSwitch
+)
+lightBackyardUpperLevel.pack()
+
+
 
 # request functionUpdates to run after 2secs running
 root.after(apiRefreshTime, functionUpdates)
