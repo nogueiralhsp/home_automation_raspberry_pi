@@ -1,3 +1,13 @@
+# RELAYS
+# 1=> IO 12
+# 2=> IO 16
+# 3=> IO 20
+# 4=> IO 21
+# 5=> IO 26
+# 6=> IO 19
+# 7=> IO 13
+# 8=> IO 06
+# 
 #!/usr/bin/env python3
 import os
 from tkinter.constants import S
