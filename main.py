@@ -3,11 +3,11 @@
 # 2=> IO 16 = GardenUpperLevelLightGPIO
 # 3=> IO 20 = GarageLightOneOnGPIO
 # 4=> IO 21 = GarageLightTwoOnGPIO
-# 5=> IO 26 = 
-# 6=> IO 19 = 
-# 7=> IO 13 = 
-# 8=> IO 06 = 
-# 
+# 5=> IO 26 =
+# 6=> IO 19 =
+# 7=> IO 13 =
+# 8=> IO 06 =
+#
 #!/usr/bin/env python3
 import os
 from tkinter.constants import S
@@ -56,7 +56,7 @@ currentGardenUpperLevelLightStatus = False
 
 # Devices Ids
 # garageLightWorkbenchDeviceId ='61542f1bd06971001641672f'
-garageLightWorkbenchDeviceId ='61542f1bd06971001641672f'
+garageLightWorkbenchDeviceId = '61542f1bd06971001641672f'
 # garageLightOneDeviceId=6128d9c2274a6f001670e7b9
 garageLightOneDeviceId = '6128d9c2274a6f001670e7b9'
 # garageLightTwoDeviceId=6148cbe49334480016839378
@@ -122,13 +122,13 @@ def temperetureUpdate():
     root.after(500, temperetureUpdate)
 
 
-    
 # # ***************************************************************************
 def garageLightWorkbenchUpdate():
     global currentLightWorkbenchStatus
     global garageLightWorkbenchDeviceId
 
-    url = "https://my-home-automation-api.herokuapp.com/device/"+garageLightWorkbenchDeviceId
+    url = "https://my-home-automation-api.herokuapp.com/device/" + \
+        garageLightWorkbenchDeviceId
 
     payload = ""
     headers = {}
@@ -139,13 +139,16 @@ def garageLightWorkbenchUpdate():
     lightWorkbenchStatus = responseDict['statusBooleanValue']
 
     if lightWorkbenchStatus == True:
-        garageLightWorkbenchLabel.config(background='green', text='Workbench = On')
+        garageLightWorkbenchLabel.config(
+            background='green', text='Workbench = On')
     else:
-        garageLightWorkbenchLabel.config(background='red', text='Workbench = Off')
+        garageLightWorkbenchLabel.config(
+            background='red', text='Workbench = Off')
 
     if currentLightWorkbenchStatus != lightWorkbenchStatus:
         currentLightWorkbenchStatus = lightWorkbenchStatus
-        updateGarageLightWorkbenchGpio(currentLightWorkbenchStatus)  # updating GPIO
+        updateGarageLightWorkbenchGpio(
+            currentLightWorkbenchStatus)  # updating GPIO
     # runs garageLightWorkbenchUpdate every apiRefreshTime seconds
     root.after(apiRefreshTime, garageLightWorkbenchUpdate)
 
@@ -179,10 +182,11 @@ def lightWorkbenchSwitch():  # used when pressed button on screen
 def updateGarageLightWorkbenchGpio(lightStatus):
     # GarageLightOne Handler
     if lightStatus == True:
-        GPIO.output(WorkbenchLightGPIO, GPIO.LOW)
-    else:
         GPIO.output(WorkbenchLightGPIO, GPIO.HIGH)
+    else:
+        GPIO.output(WorkbenchLightGPIO, GPIO.LOW)
 # # ***************************************************************************
+
 
 def garageLightOneUpdate():
     global currentLightOneStatus
@@ -238,9 +242,9 @@ def lightOneSwitch():  # used when pressed button on screen
 def updateGarageLightOneGpio(lightStatus):
     # GarageLightOne Handler
     if lightStatus == True:
-        GPIO.output(GarageLightOneOnGPIO, GPIO.LOW)
-    else:
         GPIO.output(GarageLightOneOnGPIO, GPIO.HIGH)
+    else:
+        GPIO.output(GarageLightOneOnGPIO, GPIO.LOW)
 
 
 def garageLightTwoUpdate():
@@ -298,9 +302,9 @@ def lightTwoSwitch():  # used when pressed button on screen
 def updateGarageLightTwoGpio(lightStatus):
     # GarageLightTwo Handler
     if lightStatus == True:
-        GPIO.output(GarageLightTwoOnGPIO, GPIO.LOW)
-    else:
         GPIO.output(GarageLightTwoOnGPIO, GPIO.HIGH)
+    else:
+        GPIO.output(GarageLightTwoOnGPIO, GPIO.LOW)
 
 
 # ***************************************************************************
@@ -365,9 +369,9 @@ def gardenUpperLevelLightSwitch():  # used when pressed button on screen
 def updateGardenUpperLevelLightGpio(lightStatus):
     # GarageLightTwo Handler
     if lightStatus == True:
-        GPIO.output(GardenUpperLevelLightGPIO, GPIO.LOW)
-    else:
         GPIO.output(GardenUpperLevelLightGPIO, GPIO.HIGH)
+    else:
+        GPIO.output(GardenUpperLevelLightGPIO, GPIO.LOW)
 
 
 # function that run all the functions to be ran at the start
@@ -382,12 +386,22 @@ def functionUpdates():
         temperetureUpdate()
 
 
+# Updating all GPIOs at the start
+# they are all kept off for manual use of lights
+    updateGarageLightOneGpio(currentLightOneStatus)
+    updateGarageLightTwoGpio(currentLightTwoStatus)
+    updateGarageLightWorkbenchGpio(currentLightWorkbenchStatus)
+    updateGardenUpperLevelLightGpio(currentGardenUpperLevelLightStatus)
+
+
 def exit_app():
+    GPIO.cleanup()
     root.destroy()
 
 # ***************************************************************************
 #              here starts creating window and main application.            *
 # ***************************************************************************
+
 
 # vars used on GUI
 lableWidth = 15
