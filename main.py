@@ -29,23 +29,24 @@ GPIO.setmode(GPIO.BCM)
 WorkbenchLightGPIO = 12
 GPIO.setup(WorkbenchLightGPIO, GPIO.OUT)
 
-# GPIO16
-GardenUpperLevelLightGPIO = 16
-GPIO.setup(GardenUpperLevelLightGPIO, GPIO.OUT)
-
 
 # GPIO20
-GarageLightOneOnGPIO = 20
+GarageLightOneOnGPIO = 16
 GPIO.setup(GarageLightOneOnGPIO, GPIO.OUT)
 
 # GPIO21
-GarageLightTwoOnGPIO = 21
+GarageLightTwoOnGPIO = 20
 GPIO.setup(GarageLightTwoOnGPIO, GPIO.OUT)
 
+
+# GPIO16
+GardenUpperLevelLightGPIO = 21
+GPIO.setup(GardenUpperLevelLightGPIO, GPIO.OUT)
 
 # project global variables
 arduino_temperature_actual = 0
 arduino_temperature = 0
+
 currentLightWorkbenchStatus = False
 currentLightOneStatus = False
 currentLightTwoStatus = False
@@ -177,9 +178,9 @@ def lightWorkbenchSwitch():  # used when pressed button on screen
 def updateGarageLightWorkbenchGpio(lightStatus):
     # GarageLightOne Handler
     if lightStatus == True:
-        GPIO.output(WorkbenchLightGPIO, GPIO.HIGH)
-    else:
         GPIO.output(WorkbenchLightGPIO, GPIO.LOW)
+    else:
+        GPIO.output(WorkbenchLightGPIO, GPIO.HIGH)
 # # ***************************************************************************
 
 def garageLightOneUpdate():
@@ -236,9 +237,9 @@ def lightOneSwitch():  # used when pressed button on screen
 def updateGarageLightOneGpio(lightStatus):
     # GarageLightOne Handler
     if lightStatus == True:
-        GPIO.output(GarageLightOneOnGPIO, GPIO.HIGH)
-    else:
         GPIO.output(GarageLightOneOnGPIO, GPIO.LOW)
+    else:
+        GPIO.output(GarageLightOneOnGPIO, GPIO.HIGH)
 
 
 def garageLightTwoUpdate():
@@ -296,9 +297,9 @@ def lightTwoSwitch():  # used when pressed button on screen
 def updateGarageLightTwoGpio(lightStatus):
     # GarageLightTwo Handler
     if lightStatus == True:
-        GPIO.output(GarageLightTwoOnGPIO, GPIO.HIGH)
-    else:
         GPIO.output(GarageLightTwoOnGPIO, GPIO.LOW)
+    else:
+        GPIO.output(GarageLightTwoOnGPIO, GPIO.HIGH)
 
 
 # ***************************************************************************
@@ -331,7 +332,7 @@ def gardenUpperLevelLightUpdate():
             currentGardenUpperLevelLightStatus
         )  # updating GPIO
 
-    # runs garageLightOneUpdate every 2 seconds
+    # runs gardenUpperLevelLightUpdate every 2 seconds
     root.after(apiRefreshTime, gardenUpperLevelLightUpdate)
 
 
@@ -363,9 +364,9 @@ def gardenUpperLevelLightSwitch():  # used when pressed button on screen
 def updateGardenUpperLevelLightGpio(lightStatus):
     # GarageLightTwo Handler
     if lightStatus == True:
-        GPIO.output(GardenUpperLevelLightGPIO, GPIO.HIGH)
-    else:
         GPIO.output(GardenUpperLevelLightGPIO, GPIO.LOW)
+    else:
+        GPIO.output(GardenUpperLevelLightGPIO, GPIO.HIGH)
 
 
 # function that run all the functions to be ran at the start
