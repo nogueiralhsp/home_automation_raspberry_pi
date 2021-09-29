@@ -1,12 +1,12 @@
 # RELAYS
-# 1=> IO 12
-# 2=> IO 16
-# 3=> IO 20
-# 4=> IO 21
-# 5=> IO 26
-# 6=> IO 19
-# 7=> IO 13
-# 8=> IO 06
+# 1=> IO 12 = WorkbenchLightGPIO
+# 2=> IO 16 = GardenUpperLevelLightGPIO
+# 3=> IO 20 = GarageLightOneOnGPIO
+# 4=> IO 21 = GarageLightTwoOnGPIO
+# 5=> IO 26 = 
+# 6=> IO 19 = 
+# 7=> IO 13 = 
+# 8=> IO 06 = 
 # 
 #!/usr/bin/env python3
 import os
@@ -25,28 +25,36 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 
-# GPIO20
+# GPIO12
+WorkbenchLightGPIO = 12
+GPIO.setup(WorkbenchLightGPIO, GPIO.OUT)
+
+# GPIO16
 GardenUpperLevelLightGPIO = 16
 GPIO.setup(GardenUpperLevelLightGPIO, GPIO.OUT)
 
 
 # GPIO20
-GarageLightTwoOnGPIO = 20
-GPIO.setup(GarageLightTwoOnGPIO, GPIO.OUT)
+GarageLightOneOnGPIO = 20
+GPIO.setup(GarageLightOneOnGPIO, GPIO.OUT)
 
 # GPIO21
-GarageLightOneOnGPIO = 21
-GPIO.setup(GarageLightOneOnGPIO, GPIO.OUT)
+GarageLightTwoOnGPIO = 21
+GPIO.setup(GarageLightTwoOnGPIO, GPIO.OUT)
+
 
 # project global variables
 arduino_temperature_actual = 0
 arduino_temperature = 0
+currentLightWorkbenchStatus = False
 currentLightOneStatus = False
 currentLightTwoStatus = False
 currentGardenUpperLevelLightStatus = False
 
 
 # Devices Ids
+# garageLightWorkbenchDeviceId ='61542f1bd06971001641672f'
+garageLightWorkbenchDeviceId ='61542f1bd06971001641672f'
 # garageLightOneDeviceId=6128d9c2274a6f001670e7b9
 garageLightOneDeviceId = '6128d9c2274a6f001670e7b9'
 # garageLightTwoDeviceId=6148cbe49334480016839378
@@ -111,6 +119,68 @@ def temperetureUpdate():
                 print(response.text)  # logging response from api
     root.after(500, temperetureUpdate)
 
+
+    
+# # ***************************************************************************
+def garageLightWorkbenchUpdate():
+    global currentLightWorkbenchStatus
+    global garageLightWorkbenchDeviceId
+
+    url = "https://my-home-automation-api.herokuapp.com/device/"+garageLightWorkbenchDeviceId
+
+    payload = ""
+    headers = {}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    responseDict = json.loads(response.text)
+    lightWorkbenchStatus = responseDict['statusBooleanValue']
+
+    if lightWorkbenchStatus == True:
+        garageLightWorkbenchLabel.config(background='green', text='Workbench = On')
+    else:
+        garageLightWorkbenchLabel.config(background='red', text='Workbench = Off')
+
+    if currentLightWorkbenchStatus != lightWorkbenchStatus:
+        currentLightWorkbenchStatus = lightWorkbenchStatus
+        updateGarageLightWorkbenchGpio(currentLightWorkbenchStatus)  # updating GPIO
+    # runs garageLightWorkbenchUpdate every apiRefreshTime seconds
+    root.after(apiRefreshTime, garageLightWorkbenchUpdate)
+
+
+def lightWorkbenchSwitch():  # used when pressed button on screen
+    global currentLightWorkbenchStatus
+    global garageLightWorkbenchDeviceId
+
+    if currentLightWorkbenchStatus == True:
+        lightWorkbenchSwitchTo = False
+    else:
+        lightWorkbenchSwitchTo = True
+
+    url = "https://my-home-automation-api.herokuapp.com/device/status"
+
+    payload = json.dumps({
+        "device": garageLightWorkbenchDeviceId,
+        "statusValue": "non",
+        "statusBooleanValue": lightWorkbenchSwitchTo,
+        "statusType": "digital"
+    })
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    print(response.text)
+
+
+def updateGarageLightWorkbenchGpio(lightStatus):
+    # GarageLightOne Handler
+    if lightStatus == True:
+        GPIO.output(WorkbenchLightGPIO, GPIO.HIGH)
+    else:
+        GPIO.output(WorkbenchLightGPIO, GPIO.LOW)
+# # ***************************************************************************
 
 def garageLightOneUpdate():
     global currentLightOneStatus
@@ -300,6 +370,7 @@ def updateGardenUpperLevelLightGpio(lightStatus):
 
 # function that run all the functions to be ran at the start
 def functionUpdates():
+    garageLightWorkbenchUpdate()
     garageLightOneUpdate()
     garageLightTwoUpdate()
     gardenUpperLevelLightUpdate()
@@ -423,6 +494,24 @@ lightTwoButton = Button(
 )
 lightTwoButton.pack()
 
+
+# light Workbench items
+garageLightWorkbenchLabel = Label(
+    garageFrame,
+    text='Loading...',
+    width=lableWidth,
+    height=lableHeigh,
+)
+garageLightWorkbenchLabel.pack()
+
+lightWorkbenchButton = Button(
+    garageFrame,
+    text='Workbench',
+    width=buttonWidth,
+    height=buttonHeight,
+    command=lightWorkbenchSwitch
+)
+lightWorkbenchButton.pack()
 
 # Garden components
 upperLevelLightLabel = Label(
