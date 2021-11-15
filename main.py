@@ -86,7 +86,7 @@ if os.path.exists('/dev/ttyUSB0'):
 def internetConnectionCheck():
     try:
         request = requests.get("https://my-home-automation-api.herokuapp.com" , timeout=0.5)
-        print("connected to the internet")
+        # print("connected to the internet")
         internetConnectionExists = True
         if internetConnectionExists == True:
             onlineStatus.config(background='green', text='We are on-line')
@@ -94,7 +94,7 @@ def internetConnectionCheck():
             onlineStatus.config(background='red', text='We are off-line')
 
     except (requests.ConnectionError, requests.Timeout) as exception:
-        print("no internet connection")
+        # print("no internet connection")
         internetConnectionExists = False    
 
 
@@ -393,15 +393,20 @@ def updateGardenUpperLevelLightGpio(lightStatus):
 
 # function that run all the functions to be ran at the start
 def functionUpdates():
-    garageLightWorkbenchUpdate()
-    garageLightOneUpdate()
-    garageLightTwoUpdate()
-    gardenUpperLevelLightUpdate()
-    internetConnectionCheck()
+    global internetConnectionExists
     # serialExist means arduino is connected and available on USB
     if serialExists == True:
         temperetureUpdate()
 
+    internetConnectionCheck()
+
+    if internetConnectionExists == True:
+        print("internet connection ok")
+
+    garageLightOneUpdate()
+    garageLightTwoUpdate()
+    gardenUpperLevelLightUpdate()
+    garageLightWorkbenchUpdate()
 
 # Updating all GPIOs at the start
 # they are all kept off for manual use of lights
