@@ -65,7 +65,6 @@ garageLightTwoDeviceId = '6148cbe49334480016839378'
 gardenUpperLevelLightId = '6149904b2f671e0016137975'
 
 serialExists = False
-internetConnectionExists = False
 apiRefreshTime = 2000  # time to call api for refreshing / call api
 
 
@@ -83,11 +82,16 @@ if os.path.exists('/dev/ttyUSB0'):
 
 
 # Checking internet connection
+# returns true if there internet connection is on
 def internetConnectionCheck():
+    timeoutCheck = 0.5
+    url = "https://my-home-automation-api.herokuapp.com"
+
     try:
-        request = requests.get("https://my-home-automation-api.herokuapp.com" , timeout=0.5)
+        request = requests.get(url, timeout = timeoutCheck)
         # print("connected to the internet")
         internetConnectionExists = True
+
         if internetConnectionExists == True:
             onlineStatus.config(background='green', text='We are on-line')
         else:
@@ -95,12 +99,15 @@ def internetConnectionCheck():
 
     except (requests.ConnectionError, requests.Timeout) as exception:
         # print("no internet connection")
-        internetConnectionExists = False    
+        internetConnectionExists = False
 
+    return internetConnectionExists
 
 # ***************************************************************************
 #                         Garage Handling Functions                         *
 # ***************************************************************************
+
+
 def temperetureUpdate():
 
     global arduino_temperature
@@ -119,23 +126,26 @@ def temperetureUpdate():
                 temperatureEntry.insert(
                     0, '         '+str(arduino_temperature)+(' °C'))  # inserting to entry component
 
-                if internetConnectionExists == True:
-                    url = "https://my-home-automation-api.herokuapp.com/device/status"
+            
+                url = "https://my-home-automation-api.herokuapp.com/device/status"
 
-                    payload = json.dumps({
-                        "device": "611e35ada7eb2f23a5a86999",
-                        "statusValue": arduino_temperature,
-                        "statusBooleanValue": False,
-                        "statusType": "analog"
-                    })
-                    headers = {
-                        'Content-Type': 'application/json'
-                    }
+                payload = json.dumps({
+                    "device": "611e35ada7eb2f23a5a86999",
+                    "statusValue": arduino_temperature,
+                    "statusBooleanValue": False,
+                    "statusType": "analog"
+                })
+                headers = {
+                    'Content-Type': 'application/json'
+                }
 
-                    response = requests.request(
-                        "POST", url, headers=headers, data=payload)
+                response = requests.request(
+                    "POST", url, headers=headers, data=payload)
 
-                    print(response.text)  # logging response from api
+                print(response.text)  # logging response from api
+    else:
+        print("Equipment offline. Loging on screen only " , arduino_temperature," °C")  # loging on terminal for debug
+
     root.after(500, temperetureUpdate)
 
 
@@ -166,8 +176,6 @@ def garageLightWorkbenchUpdate():
         currentLightWorkbenchStatus = lightWorkbenchStatus
         updateGarageLightWorkbenchGpio(
             currentLightWorkbenchStatus)  # updating GPIO
-    # runs garageLightWorkbenchUpdate every apiRefreshTime seconds
-    root.after(apiRefreshTime, garageLightWorkbenchUpdate)
 
 
 def lightWorkbenchSwitch():  # used when pressed button on screen
@@ -227,8 +235,6 @@ def garageLightOneUpdate():
     if currentLightOneStatus != lightOneStatus:
         currentLightOneStatus = lightOneStatus
         updateGarageLightOneGpio(currentLightOneStatus)  # updating GPIO
-    # runs garageLightOneUpdate every 2 seconds
-    root.after(apiRefreshTime, garageLightOneUpdate)
 
 
 def lightOneSwitch():  # used when pressed button on screen
@@ -286,9 +292,6 @@ def garageLightTwoUpdate():
     if currentLightTwoStatus != lightTwoStatus:
         currentLightTwoStatus = lightTwoStatus
         updateGarageLightTwoGpio(currentLightTwoStatus)  # updating GPIO
-
-    # runs garageLightTwoUpdate every 2 seconds
-    root.after(apiRefreshTime, garageLightTwoUpdate)
 
 
 def lightTwoSwitch():  # used when pressed button on screen
@@ -354,9 +357,6 @@ def gardenUpperLevelLightUpdate():
             currentGardenUpperLevelLightStatus
         )  # updating GPIO
 
-    # runs gardenUpperLevelLightUpdate every 2 seconds
-    root.after(apiRefreshTime, gardenUpperLevelLightUpdate)
-
 
 def gardenUpperLevelLightSwitch():  # used when pressed button on screen
     global currentGardenUpperLevelLightStatus
@@ -398,15 +398,12 @@ def functionUpdates():
     if serialExists == True:
         temperetureUpdate()
 
-    internetConnectionCheck()
+    if internetConnectionCheck():
+        garageLightOneUpdate()
+        garageLightTwoUpdate()
+        gardenUpperLevelLightUpdate()
+        garageLightWorkbenchUpdate()
 
-    if internetConnectionExists == True:
-        print("internet connection ok")
-
-    garageLightOneUpdate()
-    garageLightTwoUpdate()
-    gardenUpperLevelLightUpdate()
-    garageLightWorkbenchUpdate()
 
 # Updating all GPIOs at the start
 # they are all kept off for manual use of lights
@@ -414,6 +411,9 @@ def functionUpdates():
     updateGarageLightTwoGpio(currentLightTwoStatus)
     updateGarageLightWorkbenchGpio(currentLightWorkbenchStatus)
     updateGardenUpperLevelLightGpio(currentGardenUpperLevelLightStatus)
+
+    # request functionUpdates to run after 2secs running
+    root.after(apiRefreshTime, functionUpdates)
 
 
 def exit_app():
@@ -491,7 +491,7 @@ bottomControls.pack(
 
 )
 
-# 
+#
 # Status Components
 onlineStatus = Label(
     statusFrame,
@@ -501,14 +501,6 @@ onlineStatus = Label(
 )
 onlineStatus.pack()
 
-upperLevelLightButton = Button(
-    gardenFrame,
-    text='Upper Level',
-    width=buttonWidth,
-    height=buttonHeight,
-    command=gardenUpperLevelLightSwitch
-)
-upperLevelLightButton.pack()
 # Temperature Items
 temperatureLabel = Label(
     garageFrame,
@@ -608,9 +600,7 @@ closeButton = Button(
 )
 closeButton.pack(side='bottom')
 
-# request functionUpdates to run after 2secs running
 root.after(apiRefreshTime, functionUpdates)
-
 
 # main loop root
 root.mainloop()
