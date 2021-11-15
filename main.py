@@ -64,7 +64,8 @@ garageLightTwoDeviceId = '6148cbe49334480016839378'
 # gardenUpperLevelLightId="6149904b2f671e0016137975"
 gardenUpperLevelLightId = '6149904b2f671e0016137975'
 
-serialExisit = False
+serialExists = False
+internetConnectionExists = False
 apiRefreshTime = 2000  # time to call api for refreshing / call api
 
 
@@ -78,7 +79,23 @@ if os.environ.get('DISPLAY', '') == '':
 if os.path.exists('/dev/ttyUSB0'):
     ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     ser.flush()
-    serialExisit = True  # true when arduino is found
+    serialExists = True  # true when arduino is found
+
+
+# Checking internet connection
+def internetConnectionCheck():
+    try:
+        request = requests.get("https://my-home-automation-api.herokuapp.com" , timeout=0.5)
+        print("connected to the internet")
+        internetConnectionExists = True
+        if internetConnectionExists == True:
+            onlineStatus.config(background='green', text='We are on-line')
+        else:
+            onlineStatus.config(background='red', text='We are off-line')
+
+    except (requests.ConnectionError, requests.Timeout) as exception:
+        print("no internet connection")
+        internetConnectionExists = False    
 
 
 # ***************************************************************************
@@ -87,9 +104,8 @@ if os.path.exists('/dev/ttyUSB0'):
 def temperetureUpdate():
 
     global arduino_temperature
-    global serialExisit
 
-    if serialExisit == True:
+    if serialExists == True:
 
         # while True:
         if ser.in_waiting > 0:
@@ -103,22 +119,23 @@ def temperetureUpdate():
                 temperatureEntry.insert(
                     0, '         '+str(arduino_temperature)+(' °C'))  # inserting to entry component
 
-                url = "https://my-home-automation-api.herokuapp.com/device/status"
+                if internetConnectionExists == True:
+                    url = "https://my-home-automation-api.herokuapp.com/device/status"
 
-                payload = json.dumps({
-                    "device": "611e35ada7eb2f23a5a86999",
-                    "statusValue": arduino_temperature,
-                    "statusBooleanValue": False,
-                    "statusType": "analog"
-                })
-                headers = {
-                    'Content-Type': 'application/json'
-                }
+                    payload = json.dumps({
+                        "device": "611e35ada7eb2f23a5a86999",
+                        "statusValue": arduino_temperature,
+                        "statusBooleanValue": False,
+                        "statusType": "analog"
+                    })
+                    headers = {
+                        'Content-Type': 'application/json'
+                    }
 
-                response = requests.request(
-                    "POST", url, headers=headers, data=payload)
+                    response = requests.request(
+                        "POST", url, headers=headers, data=payload)
 
-                print(response.text)  # logging response from api
+                    print(response.text)  # logging response from api
     root.after(500, temperetureUpdate)
 
 
@@ -380,9 +397,9 @@ def functionUpdates():
     garageLightOneUpdate()
     garageLightTwoUpdate()
     gardenUpperLevelLightUpdate()
-
+    internetConnectionCheck()
     # serialExist means arduino is connected and available on USB
-    if serialExisit == True:
+    if serialExists == True:
         temperetureUpdate()
 
 
@@ -421,6 +438,17 @@ mainContainerFrame.pack(
     side='top',
     expand='yes'
 )
+statusFrame = LabelFrame(
+    mainContainerFrame,
+    text='Status',
+    width=100,
+    height=10,
+    # bg="#331a00"
+)
+statusFrame.pack(
+    fill="both",
+    expand="yes",
+)
 garageFrame = LabelFrame(
     mainContainerFrame,
     text='Garage Controls',
@@ -458,7 +486,24 @@ bottomControls.pack(
 
 )
 
+# 
+# Status Components
+onlineStatus = Label(
+    statusFrame,
+    text='Loading...',
+    width=lableWidth,
+    height=lableHeigh,
+)
+onlineStatus.pack()
 
+upperLevelLightButton = Button(
+    gardenFrame,
+    text='Upper Level',
+    width=buttonWidth,
+    height=buttonHeight,
+    command=gardenUpperLevelLightSwitch
+)
+upperLevelLightButton.pack()
 # Temperature Items
 temperatureLabel = Label(
     garageFrame,
