@@ -31,7 +31,7 @@ WorkbenchLightGPIO = 12
 GPIO.setup(WorkbenchLightGPIO, GPIO.OUT)
 
 
-# GPIO20
+# GPIO16
 GarageLightOneOnGPIO = 16
 GPIO.setup(GarageLightOneOnGPIO, GPIO.OUT)
 
