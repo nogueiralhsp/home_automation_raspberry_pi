@@ -9,12 +9,11 @@
 # 8=> IO 06 =
 #
 #!/usr/bin/env python3
-import os
+
 from tkinter.constants import S
 import serial
 import requests
 import json
-
 
 import tkinter as tk
 from tkinter import *
@@ -25,6 +24,11 @@ import time
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
+
+############# importing stuffs from my files #############
+
+# used to run app through SSH
+from utils.ssh_display_setting import *
 
 # GPIO12
 WorkbenchLightGPIO = 12
@@ -68,10 +72,10 @@ serialExists = False
 apiRefreshTime = 2000  # time to call api for refreshing / call api
 
 
-# used to run app through SSH
-if os.environ.get('DISPLAY', '') == '':
-    # print('no display found. Using :0.0') #commented out when don't want to log in terminal
-    os.environ.__setitem__('DISPLAY', ':0.0')
+# # used to run app through SSH
+# if os.environ.get('DISPLAY', '') == '':
+#     # print('no display found. Using :0.0') #commented out when don't want to log in terminal
+#     os.environ.__setitem__('DISPLAY', ':0.0')
 
 
 # checking if there Arduino is connected and USB port is available
