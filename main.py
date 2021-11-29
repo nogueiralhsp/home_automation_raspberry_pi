@@ -331,6 +331,17 @@ def updateGarageLightTwoGpio(lightStatus):
         GPIO.output(GarageLightTwoOnGPIO, GPIO.LOW)
 
 
+def garageAllLightsOff():
+    if (currentLightWorkbenchStatus == True):
+        lightWorkbenchSwitch()
+
+    if (currentLightOneStatus == True):
+        lightOneSwitch()
+
+    if (currentLightTwoStatus == True):
+        lightTwoSwitch()    
+
+
 # ***************************************************************************
 #                         Garden Handling Functions                         *
 # ***************************************************************************
@@ -437,6 +448,7 @@ buttonHeight = 1
 
 
 # Create Window
+ssh_display() #
 root = tk.Tk()
 root.geometry('400x480')
 mainContainerFrame = Frame(
@@ -492,7 +504,6 @@ bottomControls.pack(
     side='top',
     fill='both',
     expand='yes',
-
 )
 
 #
@@ -574,6 +585,16 @@ lightWorkbenchButton = Button(
     command=lightWorkbenchSwitch
 )
 lightWorkbenchButton.pack()
+
+# All Lights in Garage Off
+garageAllLightsOffButton = Button(
+    garageFrame,
+    text='All Lights Off',
+    width=buttonWidth,
+    height=buttonHeight,
+    command=garageAllLightsOff
+)
+garageAllLightsOffButton.pack()
 
 # Garden components
 upperLevelLightLabel = Label(
