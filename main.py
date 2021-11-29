@@ -10,6 +10,7 @@
 #
 #!/usr/bin/env python3
 
+from utils.ssh_display_setting import *
 from tkinter.constants import S
 import serial
 import requests
@@ -28,7 +29,6 @@ GPIO.setmode(GPIO.BCM)
 ############# importing stuffs from my files #############
 
 # used to run app through SSH
-from utils.ssh_display_setting import *
 
 # GPIO12
 WorkbenchLightGPIO = 12
@@ -72,10 +72,10 @@ serialExists = False
 apiRefreshTime = 2000  # time to call api for refreshing / call api
 
 
-# used to run app through SSH
-if os.environ.get('DISPLAY', '') == '':
-    # print('no display found. Using :0.0') #commented out when don't want to log in terminal
-    os.environ.__setitem__('DISPLAY', ':0.0')
+# # used to run app through SSH
+# if os.environ.get('DISPLAY', '') == '':
+#     # print('no display found. Using :0.0') #commented out when don't want to log in terminal
+#     os.environ.__setitem__('DISPLAY', ':0.0')
 
 
 # checking if there Arduino is connected and USB port is available
@@ -92,7 +92,7 @@ def internetConnectionCheck():
     url = "https://my-home-automation-api.herokuapp.com"
 
     try:
-        request = requests.get(url, timeout = timeoutCheck)
+        request = requests.get(url, timeout=timeoutCheck)
         # print("connected to the internet")
         internetConnectionExists = True
 
@@ -111,17 +111,26 @@ def internetConnectionCheck():
 #                         Garage Handling Functions                         *
 # ***************************************************************************
 
+varTest = '0.0020.002'
 
 def temperetureUpdate():
 
     global arduino_temperature
-
+    global varTest
     if serialExists == True:
 
         # while True:
         if ser.in_waiting > 0:
-            arduino_temperature_actual = float(
-                ser.readline().decode('utf-8').rstrip())
+            try:
+                # arduino_temperature_actual = float(
+                #     ser.readline().decode('utf-8').rstrip())
+                arduino_temperature_actual = float(
+                    varTest.decode('utf-8').rstrip())
+            except:
+                arduino_temperature_actual = 0.00
+                varTest=0
+                print('not float, im here')
+
             if arduino_temperature + 0.25 < arduino_temperature_actual or arduino_temperature - 0.25 > arduino_temperature_actual:
                 arduino_temperature = arduino_temperature_actual
 
@@ -130,7 +139,6 @@ def temperetureUpdate():
                 temperatureEntry.insert(
                     0, '         '+str(arduino_temperature)+(' °C'))  # inserting to entry component
 
-            
                 url = "https://my-home-automation-api.herokuapp.com/device/status"
 
                 payload = json.dumps({
@@ -148,7 +156,8 @@ def temperetureUpdate():
 
                 print(response.text)  # logging response from api
     else:
-        print("Equipment offline. Loging on screen only " , arduino_temperature," °C")  # loging on terminal for debug
+        print("Equipment offline. Loging on screen only ",
+              arduino_temperature, " °C")  # loging on terminal for debug
 
     root.after(500, temperetureUpdate)
 
@@ -339,7 +348,7 @@ def garageAllLightsOff():
         lightOneSwitch()
 
     if (currentLightTwoStatus == True):
-        lightTwoSwitch()    
+        lightTwoSwitch()
 
 
 # ***************************************************************************
@@ -448,7 +457,7 @@ buttonHeight = 1
 
 
 # Create Window
-ssh_display() #
+ssh_display()
 root = tk.Tk()
 root.geometry('400x480')
 mainContainerFrame = Frame(
