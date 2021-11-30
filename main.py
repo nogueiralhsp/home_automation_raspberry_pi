@@ -58,6 +58,8 @@ currentLightTwoStatus = False
 currentGardenUpperLevelLightStatus = False
 
 
+
+
 # Devices Ids
 # garageLightWorkbenchDeviceId ='61542f1bd06971001641672f'
 garageLightWorkbenchDeviceId = '61542f1bd06971001641672f'
@@ -111,25 +113,22 @@ def internetConnectionCheck():
 #                         Garage Handling Functions                         *
 # ***************************************************************************
 
-varTest = '0.0020.002'
+
+
 
 def temperetureUpdate():
 
     global arduino_temperature
-    global varTest
+
     if serialExists == True:
 
         # while True:
         if ser.in_waiting > 0:
             try:
-                # arduino_temperature_actual = float(
-                #     ser.readline().decode('utf-8').rstrip())
                 arduino_temperature_actual = float(
-                    varTest.decode('utf-8').rstrip())
+                    ser.readline().decode('utf-8').rstrip())
             except:
                 arduino_temperature_actual = 0.00
-                varTest=0
-                print('not float, im here')
 
             if arduino_temperature + 0.25 < arduino_temperature_actual or arduino_temperature - 0.25 > arduino_temperature_actual:
                 arduino_temperature = arduino_temperature_actual
