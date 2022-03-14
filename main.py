@@ -152,6 +152,7 @@ def temperetureUpdate():
 
                     print(response.text)  # logging response from api
                 except requests.exceptions.RequestException as e:  # This is the correct syntax
+                    print(e)
                     raise SystemExit(e)
 
     else:
