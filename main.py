@@ -58,8 +58,6 @@ currentLightTwoStatus = False
 currentGardenUpperLevelLightStatus = False
 
 
-
-
 # Devices Ids
 # garageLightWorkbenchDeviceId ='61542f1bd06971001641672f'
 garageLightWorkbenchDeviceId = '61542f1bd06971001641672f'
@@ -114,8 +112,6 @@ def internetConnectionCheck():
 # ***************************************************************************
 
 
-
-
 def temperetureUpdate():
 
     global arduino_temperature
@@ -134,7 +130,8 @@ def temperetureUpdate():
                 arduino_temperature = arduino_temperature_actual
 
                 print(arduino_temperature)  # loging on terminal for debug
-                temperatureEntry.delete(0, 'end') #temperature entry is the var for temperature field on interface
+                # temperature entry is the var for temperature field on interface
+                temperatureEntry.delete(0, 'end')
                 temperatureEntry.insert(
                     0, '         '+str(arduino_temperature)+(' °C'))  # inserting to entry component
 
@@ -149,11 +146,14 @@ def temperetureUpdate():
                 headers = {
                     'Content-Type': 'application/json'
                 }
+                try:
+                    response = requests.request(
+                        "POST", url, headers=headers, data=payload)
 
-                response = requests.request(
-                    "POST", url, headers=headers, data=payload)
+                    print(response.text)  # logging response from api
+                except requests.exceptions.RequestException as e:  # This is the correct syntax
+                    raise SystemExit(e)
 
-                print(response.text)  # logging response from api
     else:
         print("Equipment offline. Loging on screen only ",
               arduino_temperature, " °C")  # loging on terminal for debug
