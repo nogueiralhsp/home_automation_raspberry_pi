@@ -134,7 +134,7 @@ def temperetureUpdate():
                 arduino_temperature = arduino_temperature_actual
 
                 print(arduino_temperature)  # loging on terminal for debug
-                temperatureEntry.delete(0, 'end')
+                temperatureEntry.delete(0, 'end') #temperature entry is the var for temperature field on interface
                 temperatureEntry.insert(
                     0, '         '+str(arduino_temperature)+(' °C'))  # inserting to entry component
 
