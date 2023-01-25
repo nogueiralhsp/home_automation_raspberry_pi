@@ -28,8 +28,6 @@ GPIO.setmode(GPIO.BCM)
 
 ############# importing stuffs from my files #############
 
-# used to run app through SSH
-
 # GPIO12
 WorkbenchLightGPIO = 12
 GPIO.setup(WorkbenchLightGPIO, GPIO.OUT)
