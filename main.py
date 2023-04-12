@@ -25,6 +25,8 @@ import time
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
+apiurl = 'https://homeautomationlp.cyclic.app'
+
 
 ############# importing stuffs from my files #############
 
@@ -87,7 +89,8 @@ if os.path.exists('/dev/ttyUSB0'):
 # returns true if there internet connection is on
 def internetConnectionCheck():
     timeoutCheck = 0.5
-    url = "https://my-home-automation-api.herokuapp.com"
+    # url = apiurl+""
+    url=apiurl
 
     try:
         request = requests.get(url, timeout=timeoutCheck)
@@ -133,7 +136,7 @@ def temperetureUpdate():
                 temperatureEntry.insert(
                     0, '         '+str(arduino_temperature)+(' °C'))  # inserting to entry component
 
-                url = "https://my-home-automation-api.herokuapp.com/device/status"
+                url = apiurl+"/device/status"
 
                 payload = json.dumps({
                     "device": "611e35ada7eb2f23a5a86999",
@@ -165,7 +168,7 @@ def garageLightWorkbenchUpdate():
     global currentLightWorkbenchStatus
     global garageLightWorkbenchDeviceId
 
-    url = "https://my-home-automation-api.herokuapp.com/device/" + \
+    url = apiurl+"/device/" + \
         garageLightWorkbenchDeviceId
 
     payload = ""
@@ -198,7 +201,7 @@ def lightWorkbenchSwitch():  # used when pressed button on screen
     else:
         lightWorkbenchSwitchTo = True
 
-    url = "https://my-home-automation-api.herokuapp.com/device/status"
+    url = apiurl+"/device/status"
 
     payload = json.dumps({
         "device": garageLightWorkbenchDeviceId,
@@ -228,7 +231,7 @@ def garageLightOneUpdate():
     global currentLightOneStatus
     global garageLightOneDeviceId
 
-    url = "https://my-home-automation-api.herokuapp.com/device/"+garageLightOneDeviceId
+    url = apiurl+"/device/"+garageLightOneDeviceId
 
     payload = ""
     headers = {}
@@ -256,7 +259,7 @@ def lightOneSwitch():  # used when pressed button on screen
     else:
         lightOneSwitchTo = True
 
-    url = "https://my-home-automation-api.herokuapp.com/device/status"
+    url = apiurl+"/device/status"
 
     payload = json.dumps({
         "device": garageLightOneDeviceId,
@@ -285,7 +288,7 @@ def garageLightTwoUpdate():
     global garageLightTwoDeviceId
     global currentLightTwoStatus
 
-    url = "https://my-home-automation-api.herokuapp.com/device/"+garageLightTwoDeviceId
+    url = apiurl+"/device/"+garageLightTwoDeviceId
 
     payload = ""
     headers = {}
@@ -313,7 +316,7 @@ def lightTwoSwitch():  # used when pressed button on screen
     else:
         lightTwoSwitchTo = True
 
-    url = "https://my-home-automation-api.herokuapp.com/device/status"
+    url = apiurl+"/device/status"
 
     payload = json.dumps({
         "device": garageLightTwoDeviceId,
@@ -357,7 +360,7 @@ def gardenUpperLevelLightUpdate():
     global currentGardenUpperLevelLightStatus
     global gardenUpperLevelLightId
 
-    url = "https://my-home-automation-api.herokuapp.com/device/"+gardenUpperLevelLightId
+    url = apiurl+"/device/"+gardenUpperLevelLightId
 
     payload = ""
     headers = {}
@@ -388,7 +391,7 @@ def gardenUpperLevelLightSwitch():  # used when pressed button on screen
     else:
         gardenUpperLevelLightSwitchTo = True
 
-    url = "https://my-home-automation-api.herokuapp.com/device/status"
+    url = apiurl+"/device/status"
 
     payload = json.dumps({
         "device": gardenUpperLevelLightId,
