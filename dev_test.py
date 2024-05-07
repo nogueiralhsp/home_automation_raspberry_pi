@@ -152,60 +152,6 @@ def temperetureUpdate():
             arduino_temperature, " °C")  # loging on terminal for debug
 
     root.after(500, temperetureUpdate)
-# # ***************************************************************************
-def garageLightWorkbenchUpdate():
-
-    global currentLightWorkbenchStatus
-    global garageLightWorkbenchDeviceId
-
-    url = apiurl+"/device/"+garageLightWorkbenchDeviceId
-
-    payload = ""
-    headers = {}
-
-    response = requests.request("GET", url, headers=headers, data=payload)
-
-    responseDict = json.loads(response.text)
-    lightWorkbenchStatus = responseDict['statusBooleanValue']
-
-    if lightWorkbenchStatus == True:
-        garageLightWorkbenchLabel.config(
-            background='green', text='Workbench = On')
-    else:
-        garageLightWorkbenchLabel.config(
-            background='red', text='Workbench = Off')
-
-    if currentLightWorkbenchStatus != lightWorkbenchStatus:
-        currentLightWorkbenchStatus = lightWorkbenchStatus
-        updateGarageLightWorkbenchGpio(
-            currentLightWorkbenchStatus)  # updating GPIO
-
-
-def lightWorkbenchSwitch():  # used when pressed button on screen to toggle status
-    global currentLightWorkbenchStatus
-    global garageLightWorkbenchDeviceId
-
-    if currentLightWorkbenchStatus == True:
-        lightWorkbenchSwitchTo = False
-    else:
-        lightWorkbenchSwitchTo = True
-
-    url = apiurl+"/device/status"
-
-    payload = json.dumps({
-        "device": garageLightWorkbenchDeviceId,
-        "statusValue": "non",
-        "statusBooleanValue": lightWorkbenchSwitchTo,
-        "statusType": "digital"
-    })
-    headers = {
-        'Content-Type': 'application/json'
-    }
-
-    response = requests.request("POST", url, headers=headers, data=payload)
-
-    print(response.text)
-
 # updating GPIO
 def updateGarageLightWorkbenchGpio(lightStatus):
     # GarageLightOne Handler
@@ -216,96 +162,28 @@ def updateGarageLightWorkbenchGpio(lightStatus):
 
 # new button test function
 def upperLightsHandler():
-    print("upper lights handler")
+    # Read the status of the Garden Upper Level
+    status =  GPIO.input(GardenUpperLevelLightGPIO)
     # GarageLightTwo Handler
-    if GardenUpperLevelLightGPIO == True:
-        print("upper lights handler on")
-    else:
-        print("upper lights handler is off")
-
-# upper level light handling functions
-def gardenUpperLevelLightUpdate(): 
-    global currentGardenUpperLevelLightStatus
-    global gardenUpperLevelLightId
-
-    url = apiurl+"/device/"+gardenUpperLevelLightId
-
-    payload = ""
-    headers = {}
-
-    response = requests.request("GET", url, headers=headers, data=payload)
-    responseDict = json.loads(response.text)
-    # light status from server (data base)
-    gardenUpperLevelLightStatus = responseDict['statusBooleanValue']
-
-    if gardenUpperLevelLightStatus == True:
-        upperLevelLightLabel.config(background='green', text='Light 1 = On')
-    else:
-        upperLevelLightLabel.config(background='red', text='Light 1 = Off')
-
-    if gardenUpperLevelLightStatus != currentGardenUpperLevelLightStatus:
-        currentGardenUpperLevelLightStatus = gardenUpperLevelLightStatus
-        updateGardenUpperLevelLightGpio(
-            currentGardenUpperLevelLightStatus
-        )  # updating GPIO
-
-
-# used when pressed button on screen to toggle status
-def gardenUpperLevelLightSwitch(): 
-    global currentGardenUpperLevelLightStatus
-    if currentGardenUpperLevelLightStatus == True:
-        gardenUpperLevelLightSwitchTo = False
-    else:
-        gardenUpperLevelLightSwitchTo = True
-    url = apiurl+"/device/status"
-    payload = json.dumps({
-        "device": gardenUpperLevelLightId,
-        "statusValue": "non",
-        "statusBooleanValue": gardenUpperLevelLightSwitchTo,
-        "statusType": "digital"
-    })
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.text)
-
-
-
-
-def updateGardenUpperLevelLightGpio(lightStatus):
-    
-    # GarageLightTwo Handler
-    if lightStatus == True:
-        GPIO.output(GardenUpperLevelLightGPIO, GPIO.HIGH)
-    else:
+    if status == True:
+        print("upper lights handler on, turning off")
         GPIO.output(GardenUpperLevelLightGPIO, GPIO.LOW)
+        upperLightLabel.config(text='Lights Off')
+        upperLightLabel.config(background='red')
+        upperLightLabel.config(foreground='white')
+    else:
+        print("upper lights handler off, turning on")
+        GPIO.output(GardenUpperLevelLightGPIO, GPIO.HIGH)
+        upperLightLabel.config(text='Lights On')
+        upperLightLabel.config(background='green')
+        upperLightLabel.config(foreground='white')
 
-# function that run all the functions to be ran at the start
-def functionUpdates():
-    global internetConnectionExists
-
-    # serialExist means arduino is connected and available on USB
-    if serialExists == True:
-        temperetureUpdate()
-
-    if internetConnectionCheck():
-        # garageLightOneUpdate()
-        # garageLightTwoUpdate()
-        gardenUpperLevelLightUpdate()
-        garageLightWorkbenchUpdate()
-
-# Updating all GPIOs at the start
-# they are all kept off for manual use of lights
-    updateGarageLightWorkbenchGpio(currentLightWorkbenchStatus)
-    updateGardenUpperLevelLightGpio(currentGardenUpperLevelLightStatus)
-
-    # request functionUpdates to run after 2secs running
-    root.after(apiRefreshTime, functionUpdates)
+    # next to do, send status to API via websocket
 
 def exit_app():
     GPIO.cleanup()
     root.destroy()
+
 
 # ***************************************************************************
 #              here starts creating window and main application.            *
@@ -353,16 +231,8 @@ gardenFrame.pack(
     side='left',
     expand='yes'
 )
-bottomControls = Frame(
-    root,
-    height=1
-)
-bottomControls.pack(
-    side='top',
-    fill='both',
-    expand='yes',
-)
 
+############################################
 # Status Components
 onlineStatus = Label(
     statusFrame,
@@ -371,58 +241,32 @@ onlineStatus = Label(
     height=lableHeigh,
 )
 onlineStatus.pack()
-
-# Garden components
-# Temperature Items
-temperatureLabel = Label(
-    gardenFrame,
-    text="Current Room Sensor Temp:",
-)
-temperatureLabel.pack()
-
 # temperature entry
 temperatureEntry = Entry(
-    gardenFrame,
+    statusFrame,
     width=15
 )
 temperatureEntry.insert(0, 'loading...')
 temperatureEntry.pack()
-
 # light Workbench items
-garageLightWorkbenchLabel = Label(
+upperLightLabel = Label(
     gardenFrame,
-    text='Loading...',
+    text='Lights Off',
     width=lableWidth,
     height=lableHeigh,
+    background='red',
+    foreground='white'
 )
-garageLightWorkbenchLabel.pack()
-
-lightWorkbenchButton = Button(
+upperLightLabel.pack()
+upperLightButton = Button(
     gardenFrame,
-    text='Workbench',
+    text='Upper Garden',
     width=buttonWidth,
     height=buttonHeight,
-    command=lightWorkbenchSwitch
+    command=upperLightsHandler
 )
-lightWorkbenchButton.pack()
-
-upperLevelLightLabel = Label(
-    gardenFrame,
-    text='Loading...',
-    width=lableWidth,
-    height=lableHeigh,
-)
-upperLevelLightLabel.pack()
-
-upperLevelLightButton = Button(
-    gardenFrame,
-    text='Upper Level',
-    width=buttonWidth,
-    height=buttonHeight,
-    command=gardenUpperLevelLightSwitch
-)
-upperLevelLightButton.pack()
-
+upperLightButton.pack()
+############################################
 # close window/application button
 closeButton = Button(
     root,
@@ -432,29 +276,18 @@ closeButton = Button(
     command=exit_app
 )
 closeButton.pack(side='bottom')
+def functionUpdates():
+    global internetConnectionExists
 
-############################################
-# light Workbench items
-localButtonLabel = Label(
-    gardenFrame,
-    text='Loading...',
-    width=lableWidth,
-    height=lableHeigh,
-)
-localButtonLabel.pack()
-localButton = Button(
-    gardenFrame,
-    text='Local Buton',
-    width=buttonWidth,
-    height=buttonHeight,
-    command=upperLightsHandler
-)
-localButton.pack()
-############################################
-
+    # serialExist means arduino is connected and available on USB
+    if serialExists == True:
+        temperetureUpdate()
+    # check if there is connection to the api server
+    internetConnectionCheck()
+    # request functionUpdates to run after 2secs running
+    root.after(apiRefreshTime, functionUpdates)
+    
 root.after(apiRefreshTime, functionUpdates)
-
-
 # main loop
 if __name__ == "__main__":
     # main loop root
